@@ -35,7 +35,6 @@ class TasksController extends Controller
     public function create()
     {
         $task = new Task;
-        
         return view('tasks.create',[
             'task' => $task,    
         ]);
@@ -59,7 +58,7 @@ class TasksController extends Controller
         $task->status = $request->status;
         $task->user_id = $request->user()->id;
         $task->save();
-        
+
         return redirect('/');
     }
 
@@ -71,12 +70,14 @@ class TasksController extends Controller
      */
     public function show($id)
     {
-        /*if(Auth::id != $task->user_id){
-            return abort('/');
-        }
-        */
+        
         $task = Task::findOrFail($id);
-        $this->authorize('view',$task);
+        
+        if(\Auth::id() != $task->user_id){
+            return redirect('/');
+        }
+        //$this->authorize('view',$task);
+        
         return view('tasks.show',[
             'task' => $task, 
         ]);
@@ -91,6 +92,10 @@ class TasksController extends Controller
     public function edit($id)
     {
         $task = Task::findOrFail($id);
+        if(\Auth::id() != $task->user_id){
+            return redirect('/');
+        }
+        //$this->authorize('edit',$task);
         
         return view('tasks.edit',[
             'task' => $task, 
@@ -113,9 +118,15 @@ class TasksController extends Controller
         
         $task = Task::findOrFail($id);
         
+        if(\Auth::id() != $task->user_id){
+            return redirect('/');
+        }
+        
         $task->content = $request->content;
         $task->status = $request->status;
         $task->save();
+        
+        $this->authorize('update',$task);
         
         return redirect('/');
     }
@@ -129,6 +140,9 @@ class TasksController extends Controller
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
+        if(\Auth::id() != $task->user_id){
+            return redirect('/');
+        }
         $task->delete();
         
         return redirect('/');
