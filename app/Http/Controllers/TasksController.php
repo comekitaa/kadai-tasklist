@@ -15,11 +15,16 @@ class TasksController extends Controller
      */
     public function index()
     {
-        $tasks = Task::all();
-        
-        return view('tasks.index',[
-            'tasks' => $tasks,
-        ]);
+        if (\Auth::check()) { // 認証済みの場合
+            // 認証済みユーザを取得
+            $user = \Auth::user();
+            $tasks = Task::all();
+            $tasks = $user->tasks()->orderBy('created_at', 'asc')->paginate(10);
+            
+            return view('welcome',[
+                'tasks' => $tasks,
+            ]);
+        } return view('welcome');
     }
 
     /**
@@ -52,6 +57,7 @@ class TasksController extends Controller
         $task = new Task;
         $task->content = $request->content;
         $task->status = $request->status;
+        $task->user_id = $request->user()->id;
         $task->save();
         
         return redirect('/');
@@ -65,8 +71,12 @@ class TasksController extends Controller
      */
     public function show($id)
     {
+        /*if(Auth::id != $task->user_id){
+            return abort('/');
+        }
+        */
         $task = Task::findOrFail($id);
-        
+        $this->authorize('view',$task);
         return view('tasks.show',[
             'task' => $task, 
         ]);
